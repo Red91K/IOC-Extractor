@@ -1,7 +1,7 @@
 # IOC-Extractor
 Command-line tool to extract indicators of compromise from various sources and export to various formats.
 
-- Supports multiple sources: local plain text file OR website
+- Supports two sources: plain-text file OR website
 - Multiple export formats: JSON, Plain text, Markdown
 - Extracted Indicators:
   - IPv4 & v6 Addresses
