@@ -1,8 +1,8 @@
 # IOC-Extractor
 Command-line tool to extract indicators of compromise from various sources and export to various formats.
 
-- input sources: local plain text file OR website
-- output sources: JSON, Plain text, Markdown
+- Supports multiple sources: local plain text file OR website
+- Multiple export formats: JSON, Plain text, Markdown
 - Extracted Indicators:
   - IPv4 & v6 Addresses
   - Domains
@@ -15,6 +15,8 @@ Command-line tool to extract indicators of compromise from various sources and e
 
 # Getting Started
 ```
+git clone https://github.com/Red91K/IOC-Extractor.git
+cd IOC-Extractor
 mkdir Extracted
 mkdir Sources
 ```
@@ -23,3 +25,5 @@ mkdir Sources
 ```
 python3 Extractor.py  
 ```
+- Outputted files can be found in the `Extracted` directory
+- Extracted IOCs are automatically copied to clipboard
