@@ -1,10 +1,3 @@
-## python Script to extract indicators of compromise from various file formats & from the clipboard
-# option for multiple files
-# print to cli, copy to clipboard, export to 
-## .json, STIXX, .txt
-# indicator types
-# ipv4, ipv6, domains, urls, email addresses, md5 & sha file hashes
-
 import os
 import re
 import subprocess
@@ -16,7 +9,7 @@ from html.parser import HTMLParser
 class IOC_GROUP:
    # all possible indicators of compromise
    # if copying pasting an entire website, can pick up vendor urls & domains, internal ip addresses passed as cli arguments, etc
-   # NOT RECCOMENDED
+   # NOT recommended
    LOW_FIDELITY_IOC_REGEX = {
       # any technically valid ip address, even if witin reserved blocks
       # includes defanged ip addresses
@@ -341,12 +334,3 @@ if __name__ == "__main__":
    print("Hey, this is a class file!")
    print("Feel free to use this as a package,")
    print("but otherwise please run the [Extractor.py] script to use IOC-Extractor!")
-
-# DONE - LOAD FROM URL
-# DONE - Export by source
-# TODO - ADD CONFIG FUNCTIONALITY
-# TODO - parse multiple input at a time
-# TODO - ADD STIX Option
-# TODO - fang indicators option
-# TODO - option to switch fidelity setting
-# TODO - cross platform clipboard copying
