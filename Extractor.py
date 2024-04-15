@@ -1,6 +1,7 @@
 from extractor_class import IOC_GROUP, TextExtractor
 
 if __name__ == "__main__":   
+   IOC_GROUP.load_settings()
    my_group = IOC_GROUP()
    print("<-----IOC-Extractor (c)2024----->")
 
