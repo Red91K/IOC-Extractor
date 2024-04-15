@@ -35,4 +35,4 @@ python3 Extractor.py
 ```
 - Outputted files can be found in the `Extracted` directory
 - Extracted IOCs are automatically copied to clipboard
-- You can customise things like detection sensitivity, types of IOCs to search for, whether or not to fang exported indicators, etc by editing the config.json file.
+- You can customise things like detection sensitivity, types of IOCs to search for, and whether or not to fang exported indicators by editing the config.json file.
