@@ -1,15 +1,25 @@
+## python Script to extract indicators of compromise from various file formats & from the clipboard
+# option for multiple files
+# print to cli, copy to clipboard, export to 
+## .json, STIXX, .txt
+# indicator types
+# ipv4, ipv6, domains, urls, email addresses, md5 & sha file hashes
+
 import os
 import re
 import subprocess
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import urllib.request
 from html.parser import HTMLParser
+import random, string
+
 
 class IOC_GROUP:
+   SETTINGS = {}
    # all possible indicators of compromise
    # if copying pasting an entire website, can pick up vendor urls & domains, internal ip addresses passed as cli arguments, etc
-   # NOT recommended
+   # NOT RECCOMENDED
    LOW_FIDELITY_IOC_REGEX = {
       # any technically valid ip address, even if witin reserved blocks
       # includes defanged ip addresses
@@ -43,7 +53,6 @@ class IOC_GROUP:
       "CVEs": r"\b(CVE-\d{4}-\d{4})\b",
       "MITRE ATTACK IDs": r"\b(T\d{4}(\.\d{3})?)\b"
    }
-
 
    HIGH_FIDELITY_IOC_REGEX = {
       # any technically valid, DEFANGED ip address
@@ -79,11 +88,29 @@ class IOC_GROUP:
       "MITRE ATTACK IDs": r"\b(T\d{4}(\.\d{3})?)\b"
    }
 
+
    def __init__(self, ioc_rules:dict[str,str] = HIGH_FIDELITY_IOC_REGEX, sources:dict[str:str] = {}, ioc_dict:dict[str,str] = {}):
+      try:
+         if not self.SETTINGS["High-Fidelity-Ruleset"]:
+            ioc_rules = dict(self.LOW_FIDELITY_IOC_REGEX) # needed because pass by reference
+      except:
+         pass
+
+      try:
+         for rule_name, value in self.SETTINGS["Search-Options"].items():
+            if not value:
+               del(ioc_rules[rule_name])
+      except Exception as e:
+         pass
+
       self.ioc_rules = ioc_rules
       self.sources = sources
       self.ioc_dict = ioc_dict
-
+   
+   @classmethod
+   def load_settings(cls):
+      with open("config.json","r") as f:
+         cls.SETTINGS = json.load(f)
 
    def load_source(self, source_str:str, source_name:str):
       filepath = False
@@ -122,14 +149,13 @@ class IOC_GROUP:
          for key, value in self.ioc_rules.items():
             results = re.finditer(value, text)
             if key not in self.ioc_dict[source_name].keys():
-               self.ioc_dict[source_name][key] = []
+               self.ioc_dict[source_name][key] = set()
             
             print(f"\nSEARCHING for [{key}]...")
             for i in results:
                matched = i.group().strip()
-               if matched not in (self.ioc_dict[source_name])[key]: # check for duplicates
-                  (self.ioc_dict[source_name])[key].append(matched)
-                  print(f"[MATCH FOUND - {matched}]")
+               self.ioc_dict[source_name][key].add(self.fang(matched))
+               print(f"[MATCH FOUND - {self.fang(matched)}]")
          
       print("[IOC EXTRACTION FINISHED!]")
 
@@ -154,10 +180,9 @@ class IOC_GROUP:
          for source_name, cur_ioc_dict in self.ioc_dict.items():
             for key in cur_ioc_dict:
                if key not in combined_dict.keys():
-                  combined_dict[key] = []
+                  combined_dict[key] = set()
                for indicator in cur_ioc_dict[key]:
-                  if indicator not in combined_dict[key]:
-                     combined_dict[key].append(indicator)
+                  combined_dict[key].add(indicator)
 
          for key in combined_dict:
             if cur_ioc_dict[key]:
@@ -192,10 +217,9 @@ class IOC_GROUP:
          for source_name, cur_ioc_dict in self.ioc_dict.items():
             for key in cur_ioc_dict:
                if key not in combined_dict.keys():
-                  combined_dict[key] = []
+                  combined_dict[key] = set()
                for indicator in cur_ioc_dict[key]:
-                  if indicator not in combined_dict[key]:
-                     combined_dict[key].append(indicator)
+                  combined_dict[key].add(indicator)
 
 
          for key in combined_dict:
@@ -208,10 +232,155 @@ class IOC_GROUP:
             out_str += "\n\n"
       
       return out_str
+   
 
+   @classmethod
+   def random_alphanumeric(cls, len:int) -> str:
+      return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(len))
+   
+   @classmethod
+   def generate_stix_id(cls,type:str) -> str:
+      # format: indicator--031778a4-057f-48e6-9db9-c8d72b81ccd5
+      return f"{type}--{cls.random_alphanumeric(8)}-{cls.random_alphanumeric(4)}-{cls.random_alphanumeric(4)}-{cls.random_alphanumeric(12)}"
+   
+   @classmethod
+   def current_time(cls):
+      current_utc_time = datetime.now(timezone.utc)
+      return current_utc_time.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+   
+   @classmethod
+   def fang(cls, indicator:str):
+      try:
+         if cls.SETTINGS["Fang-Indicators"]:
+            return indicator.replace("[.]",".")
+         else:
+            return indicator
+      except:
+         print("ERRORADSF")
+         return indicator.replace("[.]",".")
 
-   def to_stix(self):
-      pass
+   def generate_stix(self, indicator:str, indicator_type:str):
+      STIX_MAPPINGS = {
+         "IPv4 Addresses": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[ipv4-addr:value = '{indicator}']"
+         },
+         "IPv6 Addresses": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[ipv6-addr:value = '{indicator}']"
+         },
+         "Domains": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[domain-name:value = '{indicator}']"
+         },
+         "URLs": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[url:value = '{indicator}']"
+         },
+         "Email Addresses": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[email-message:sender_ref.value = '{indicator}']"
+         },
+         "MD5 Hashes": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[file:hashes.'MD5' = '{indicator}']"
+         },
+         "SHA-1 Hashes": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[file:hashes.'SHA-1' = '{indicator}']"
+         },
+         "SHA256 Hashes": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[file:hashes.'SHA-256' = '{indicator}']"
+         },
+         "SHA512 Hashes": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[file:hashes.'SHA-512' = '{indicator}']"
+         },
+         "JARM Hashes": {
+            "type": "indicator",
+            "id": self.generate_stix_id("indicator"),
+            "pattern":f"[jarm-hash:value = '{indicator}']"
+         },
+         "CVEs": {
+            "type":"vulnerability",
+            "id": self.generate_stix_id("vulnerability"),
+            "name": indicator,
+            "external_references": [
+               {
+                  "source_name": "cve",
+                  "external_id": indicator
+               }
+            ]
+         },
+         "MITRE ATTACK IDs": {
+            "type":"attack-pattern",
+            "id": self.generate_stix_id("attack-pattern"),
+            "name": f"MITRE ATT&CK Technique: {indicator}",
+            "external_references": [
+               {
+                  "source_name": "mitre-attack",
+                  "external_id": indicator,
+                  "url": "https://attack.mitre.org/techniques/" + indicator
+               }
+            ]
+         }
+      }
+
+      stixx_object = {
+      "spec_version": "2.1",
+      "pattern_type": "stix",
+      "created": self.current_time(),
+      "modified": self.current_time(),
+      "valid_from": self.current_time(),
+      }
+
+      for key, value in STIX_MAPPINGS[indicator_type].items():
+         stixx_object[key] = value
+      
+      return stixx_object
+   
+
+   def to_stix(self, group_by_source:bool):
+      if group_by_source:
+         combined_dict = {}
+         for source_name, cur_ioc_dict in self.ioc_dict.items():            
+            objects_ar = []
+            for key, indicators in cur_ioc_dict.items():
+               if indicators:
+                  for indicator in indicators:
+                     objects_ar.append(self.generate_stix(indicator, key))
+            
+            if source_name not in cur_ioc_dict:
+               combined_dict[f"STIXX Bundle For Source [{source_name}]"] = {
+                  "type":"bundle",
+                  "id":self.generate_stix_id("bundle")
+               }
+            combined_dict[f"STIXX Bundle For {source_name}"]["objects"] = objects_ar
+            
+      else: 
+         objects_ar = []
+         for source_name, cur_ioc_dict in self.ioc_dict.items():
+            for key, indicators in cur_ioc_dict.items():
+               if indicators:
+                  for indicator in indicators:
+                     objects_ar.append(self.generate_stix(indicator, key))
+         combined_dict = {
+            "type":"bundle",
+            "id":self.generate_stix_id("bundle"),
+            "objects":objects_ar
+         }
+
+      return json.dumps(combined_dict, indent=3)
 
 
    def to_json(self, group_by_source:bool):
@@ -244,8 +413,12 @@ class IOC_GROUP:
          f.write(data)
       print("WRITTEN TO FILE!")
 
-      subprocess.run("pbcopy", text=True, input=data)
-      print("COPIED TO CLIPBOARD!")
+      try:
+         if self.SETTINGS["Paste-To-Clipboard"]:
+            subprocess.run("pbcopy", text=True, input=data)
+            print("COPIED TO CLIPBOARD!")
+      except:
+         pass
 
       print("\n\n----EXPORTED IOCS----")
       print(data)
@@ -284,6 +457,7 @@ class IOC_GROUP:
 
       data = (METHODS[option][0])(group_by_source)
       self.export(data, METHODS[option][1], METHODS[option][2])
+
 
 
 class TextExtractor(HTMLParser):
