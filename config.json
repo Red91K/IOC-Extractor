@@ -1,0 +1,20 @@
+{
+   "High-Fidelity-Ruleset":true,
+   "Paste-To-Clipboard":true,
+   "Fang-Indicators":true,
+   "Search-Options":{
+      "IPv4 Addresses": true,
+      "IPv6 Addresses": true,
+      "Domains": true,
+      "URLs": true,
+      "Email Addresses": true,
+      "MD5 Hashes": true,
+      "SHA-1 Hashes": true,
+      "SHA256 Hashes": true,
+      "SHA512 Hashes": true,
+      "JARM Hashes": true,
+      "CVEs": true,
+      "MITRE ATTACK IDs": true
+   },
+   "Threat-Intel-Is":"Cool"
+}
