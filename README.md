@@ -20,6 +20,7 @@ A Command-line tool to extract indicators of compromise from various sources and
   - Email Addresses
   - CVEs
   - MITRE ATTACK IDs
+ - Does not require any external libraries.
 
 # Getting Started
 1. Clone the repository and navigate inside it.
