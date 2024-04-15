@@ -27,7 +27,7 @@ A Command-line tool to extract indicators of compromise from various sources and
 git clone https://github.com/Red91K/IOC-Extractor.git
 cd IOC-Extractor
 ```
-2. Create two directories titled `Extracted` and `Sources` respectively.
+2. Create one directory named `Extracted` and another named `Sources`.
 ```
 mkdir Extracted
 mkdir Sources
