@@ -44,3 +44,4 @@ python3 Extractor.py
   - Choose an export method! Extractor currently supports plain text, markdown, json, and STIX 2.1
   - Get your extracted IOCs! Exported IOCs can be found as files in the `Extracted` directory, and will also be automatically copied to clipboard and displayed by the script. 
 - You can customise things like detection sensitivity, types of IOCs to search for, and whether or not to fang exported indicators by editing the config.json file.
+  - ⚠️ Currently, the paste to clipboard functionality might not work on Windows or Linux. Set the `Paste-To-Clipboard` option in `config.json` to `false` if this causes any issues.
