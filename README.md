@@ -5,7 +5,8 @@ A Command-line tool to extract indicators of compromise from various sources and
 - Extract IOCs from batches of threat reports
 - Generate a IOC section for reports-in-progress
 - Quickly share IOCs exported to STIX and JSON
-- Feed IOCs from the latest reports into data feeds, firewalls, IDS/IPS, etc
+- Feed IOCs from the latest reports into threat data feeds, firewalls, IDS/IPS, etc
+- (use the extractor_class.py class file to) write your own scripts!
 
 IOC Extractor...
 - Supports two sources: plain-text file OR website
@@ -34,3 +35,4 @@ python3 Extractor.py
 ```
 - Outputted files can be found in the `Extracted` directory
 - Extracted IOCs are automatically copied to clipboard
+- You can customise things like detection sensitivity, types of IOCs to search for, whether or not to fang exported indicators, etc by editing the config.json file.
