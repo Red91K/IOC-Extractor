@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 import urllib.request
 from html.parser import HTMLParser
 import random, string
-
+import platform
 
 class IOC_GROUP:
    SETTINGS = {}
@@ -415,8 +415,13 @@ class IOC_GROUP:
 
       try:
          if self.SETTINGS["Paste-To-Clipboard"]:
-            subprocess.run("pbcopy", text=True, input=data)
-            print("COPIED TO CLIPBOARD!")
+            if platform.system() == "Darwin":  # MacOS
+               subprocess.run("pbcopy", universal_newlines=True, input=data)
+            elif platform.system() == "Linux":
+               subprocess.run("xclip -selection clipboard", universal_newlines=True, input=data, shell=True)
+            elif platform.system() == "Windows":
+               subprocess.run("clip", universal_newlines=True, input=data, shell=True)
+            print("OUTPUT COPIED TO CLIPBOARD!\n")
       except:
          pass
 
